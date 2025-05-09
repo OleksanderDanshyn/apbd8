@@ -6,7 +6,8 @@ namespace Tutorial8.Services;
 
 public class ClientService : IClientService
 {
-    private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=apbd;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False";    // Retrieve all trips for a specified client, along with registration and payment details
+    private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=apbd;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False";    
+    // Retrieve all trips for a specified client, along with registration and payment details
 
     public async Task<List<ClientTripDTO>> GetTripsForClient(int id)
     {
@@ -77,12 +78,14 @@ public class ClientService : IClientService
             return id;
         }
     }
+    
+    //Add a trip to a client
     public async Task<ServiceResult> RegisterClientForTrip(int clientId, int tripId)
     {
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
     
-        // Check if the client with the given ID exists
+        //Check if the client with the given ID exists
         var checkClient = new SqlCommand("SELECT COUNT(*) FROM Client WHERE IdClient = @Id", conn);
         checkClient.Parameters.AddWithValue("@Id", clientId);
         if ((int)await checkClient.ExecuteScalarAsync() == 0)
@@ -90,7 +93,7 @@ public class ClientService : IClientService
             return new ServiceResult { Success = false, Message = "Client does not exist." };
         }
     
-        // Check if the trip with the given ID exists and retrieves its maximum capacity
+        //Check if the trip with the given ID exists and retrieves its maximum capacity
         var checkTrip = new SqlCommand("SELECT MaxPeople FROM Trip WHERE IdTrip = @Id", conn);
         checkTrip.Parameters.AddWithValue("@Id", tripId);
         var maxPeopleObj = await checkTrip.ExecuteScalarAsync();
@@ -100,7 +103,7 @@ public class ClientService : IClientService
         }
         int maxPeople = (int)maxPeopleObj;
     
-        // Count the number of clients already registered for the trip
+        //Count the number of clients already registered for the trip
         var countCmd = new SqlCommand("SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @TripId", conn);
         countCmd.Parameters.AddWithValue("@TripId", tripId);
         int registered = (int)await countCmd.ExecuteScalarAsync();
@@ -110,21 +113,21 @@ public class ClientService : IClientService
             return new ServiceResult { Success = false, Message = "Trip is full." };
         }
     
-        // Convert DateTime to integer in yyyyMMdd format for RegisteredAt
+        //Convert DateTime to integer in yyyyMMdd format for RegisteredAt
         int registeredAt = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
     
-        // Register the client for the specified trip
+        //Register the client for the specified trip
         var insertCmd = new SqlCommand(@"
             INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt, PaymentDate)
             VALUES (@ClientId, @TripId, @RegisteredAt, @PaymentDate)", conn);
     
-        // Set the parameters
+        //Set the parameters
         insertCmd.Parameters.AddWithValue("@ClientId", clientId);
         insertCmd.Parameters.AddWithValue("@TripId", tripId);
-        insertCmd.Parameters.AddWithValue("@RegisteredAt", registeredAt);  // RegisteredAt as integer
+        insertCmd.Parameters.AddWithValue("@RegisteredAt", registeredAt);
     
-        // If PaymentDate is null, use DBNull.Value
-        insertCmd.Parameters.AddWithValue("@PaymentDate", DBNull.Value);  // Assuming payment has not been made yet
+        //If PaymentDate is null, use DBNull.Value
+        insertCmd.Parameters.AddWithValue("@PaymentDate", DBNull.Value);
     
         await insertCmd.ExecuteNonQueryAsync();
     
