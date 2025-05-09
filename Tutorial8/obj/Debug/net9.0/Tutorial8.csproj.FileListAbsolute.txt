@@ -250,3 +250,4 @@ C:\Users\User\Desktop\apbd8\Tutorial8\obj\Debug\net9.0\refint\Tutorial8.dll
 C:\Users\User\Desktop\apbd8\Tutorial8\obj\Debug\net9.0\Tutorial8.pdb
 C:\Users\User\Desktop\apbd8\Tutorial8\obj\Debug\net9.0\Tutorial8.genruntimeconfig.cache
 C:\Users\User\Desktop\apbd8\Tutorial8\obj\Debug\net9.0\ref\Tutorial8.dll
+C:\Users\User\Desktop\apbd8\Tutorial8\obj\Debug\net9.0\Tutorial8.sourcelink.json

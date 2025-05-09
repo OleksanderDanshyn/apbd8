@@ -5,7 +5,8 @@ namespace Tutorial8.Services;
 //Data retrieval from trip table
 public class TripsService : ITripsService
 {
-    private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
+    private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=apbd;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False";    // Retrieve all trips for a specified client, along with registration and payment details
+
     
     // Retrieves all trips
     public async Task<List<TripDTO>> GetTrips()
