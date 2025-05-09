@@ -6,11 +6,12 @@ namespace Tutorial8.Services;
 public class ClientService : IClientService
 {
     private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
+    // Retrieve all trips for a specified client, along with registration and payment details
 
     public async Task<List<ClientTripDTO>> GetTripsForClient(int id)
     {
         var trips = new List<ClientTripDTO>();
-        
+        //Retrieve all rows of trip and needed client data
         string command = @"
         SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople,
                ct.RegisteredAt, ct.PaymentDate
@@ -43,9 +44,10 @@ public class ClientService : IClientService
         } 
         return trips;
     }
-
+    //Creation of a client, also returns his id after
     public async Task<int> CreateClient(CreateClientDTO client)
     {
+        //Insert data into each column of client table
         const string query = @"
         INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel)
         OUTPUT INSERTED.IdClient
@@ -65,19 +67,19 @@ public class ClientService : IClientService
             return id;
         }
     }
-
+    //Register a client for a trip after validating capacity and existence
     public async Task<ServiceResult> RegisterClientForTrip(int clientId, int tripId)
 {
     using var conn = new SqlConnection(_connectionString);
     await conn.OpenAsync();
-
+    //Check if the client with the given ID exists
     var checkClient = new SqlCommand("SELECT COUNT(*) FROM Client WHERE IdClient = @Id", conn);
     checkClient.Parameters.AddWithValue("@Id", clientId);
     if ((int)await checkClient.ExecuteScalarAsync() == 0)
     {
         return new ServiceResult { Success = false, Message = "Client does not exist." };
     }
-
+    //Check if the trip with the given ID exists and retrieves its maximum capacity
     var checkTrip = new SqlCommand("SELECT MaxPeople FROM Trip WHERE IdTrip = @Id", conn);
     checkTrip.Parameters.AddWithValue("@Id", tripId);
     var maxPeopleObj = await checkTrip.ExecuteScalarAsync();
@@ -86,7 +88,7 @@ public class ClientService : IClientService
         return new ServiceResult { Success = false, Message = "Trip does not exist." };
     }
     int maxPeople = (int)maxPeopleObj;
-
+    //Count the number of clients already registered for the trip
     var countCmd = new SqlCommand("SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @TripId", conn);
     countCmd.Parameters.AddWithValue("@TripId", tripId);
     int registered = (int)await countCmd.ExecuteScalarAsync();
@@ -95,7 +97,7 @@ public class ClientService : IClientService
     {
         return new ServiceResult { Success = false, Message = "Trip is full." };
     }
-
+    //"Register" the client for the specified trip
     var insertCmd = new SqlCommand(@"
         INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt)
         VALUES (@ClientId, @TripId, @Now)", conn);
@@ -107,12 +109,12 @@ public class ClientService : IClientService
 
     return new ServiceResult { Success = true, Message = "Client registered successfully." };
 }
-
-public async Task<bool> RemoveClientFromTrip(int clientId, int tripId)
-{
+    //Remove a client from a specific trip if they are registered
+    public async Task<bool> RemoveClientFromTrip(int clientId, int tripId)
+    {
     using var conn = new SqlConnection(_connectionString);
     await conn.OpenAsync();
-
+    //Check if the client is registered for the trip
     var checkCmd = new SqlCommand("SELECT COUNT(*) FROM Client_Trip WHERE IdClient = @CId AND IdTrip = @TId", conn);
     checkCmd.Parameters.AddWithValue("@CId", clientId);
     checkCmd.Parameters.AddWithValue("@TId", tripId);
@@ -120,13 +122,13 @@ public async Task<bool> RemoveClientFromTrip(int clientId, int tripId)
     {
         return false;
     }
-
+    //Remove the client from the trip
     var deleteCmd = new SqlCommand("DELETE FROM Client_Trip WHERE IdClient = @CId AND IdTrip = @TId", conn);
     deleteCmd.Parameters.AddWithValue("@CId", clientId);
     deleteCmd.Parameters.AddWithValue("@TId", tripId);
     await deleteCmd.ExecuteNonQueryAsync();
 
     return true;
-}
+    }
 
 } 

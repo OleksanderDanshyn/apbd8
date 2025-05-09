@@ -2,35 +2,62 @@
 using Tutorial8.Models.DTOs;
 
 namespace Tutorial8.Services;
-
+//Data retrieval from trip table
 public class TripsService : ITripsService
 {
     private readonly string _connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=APBD;Integrated Security=True;";
     
+    // Retrieves all trips
     public async Task<List<TripDTO>> GetTrips()
     {
         var trips = new List<TripDTO>();
+        var tripDict = new Dictionary<int, TripDTO>();
+        // To get all rows from trip table and countries names for each of those trips
+        string query = @"
+            SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople,
+                   c.Name AS CountryName
+            FROM Trip t
+            LEFT JOIN Country_Trip ct ON t.IdTrip = ct.IdTrip
+            LEFT JOIN Country c ON ct.IdCountry = c.IdCountry
+            ORDER BY t.IdTrip";
 
-        string command = "SELECT IdTrip, Name FROM Trip";
-        
-        using (SqlConnection conn = new SqlConnection(_connectionString))
-        using (SqlCommand cmd = new SqlCommand(command, conn))
+        using (var conn = new SqlConnection(_connectionString))
+        using (var cmd = new SqlCommand(query, conn))
         {
             await conn.OpenAsync();
-
             using (var reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
-                    int idOrdinal = reader.GetOrdinal("IdTrip");
-                    trips.Add(new TripDTO()
+                    int tripId = reader.GetInt32(0);
+
+                    if (!tripDict.TryGetValue(tripId, out var trip))
                     {
-                        Id = reader.GetInt32(idOrdinal),
-                        Name = reader.GetString(1),
-                    });
+                        trip = new TripDTO
+                        {
+                            Id = tripId,
+                            Name = reader.GetString(1),
+                            Description = reader.GetString(2),
+                            DateFrom = reader.GetDateTime(3),
+                            DateTo = reader.GetDateTime(4),
+                            MaxPeople = reader.GetInt32(5),
+                            Countries = new List<CountryDTO>()
+                        };
+                        tripDict[tripId] = trip;
+                        trips.Add(trip);
+                    }
+
+                    if (!reader.IsDBNull(6))
+                    {
+                        trip.Countries.Add(new CountryDTO
+                        {
+                            Name = reader.GetString(6)
+                        });
+                    }
                 }
             }
         }
+
         return trips;
     }
 }

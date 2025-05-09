@@ -14,7 +14,9 @@ public class ClientsController : ControllerBase
     {
         _clientService = clientService;
     }
-
+    
+    //GET: api/clients/{id}/trips
+    //Returns a list of trips for a specific client (by client ID)
     [HttpGet("{id}/trips")]
     public async Task<IActionResult> GetTripsForClient(int id)
     {
@@ -27,6 +29,8 @@ public class ClientsController : ControllerBase
         return Ok(trips);
     }
 
+    //POST: api/clients
+    //Creates a new client
     [HttpPost]
     public async Task<IActionResult> CreateClient([FromBody] CreateClientDTO client)
     {
@@ -46,6 +50,8 @@ public class ClientsController : ControllerBase
         }
     }
     
+    //PUT: api/clients/{id}/trips/{tripId}
+    //Registers the client with the specified ID for the given trip
     [HttpPut("{id}/trips/{tripId}")]
     public async Task<IActionResult> RegisterClientForTrip(int id, int tripId)
     {
@@ -58,6 +64,8 @@ public class ClientsController : ControllerBase
         return Ok("Client registered successfully.");
     }
 
+    //DELETE: api/clients/{id}/trips/{tripId}
+    //Removes the client's registration from a trip
     [HttpDelete("{id}/trips/{tripId}")]
     public async Task<IActionResult> RemoveClientFromTrip(int id, int tripId)
     {

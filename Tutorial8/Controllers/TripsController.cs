@@ -14,7 +14,9 @@ namespace Tutorial8.Controllers
         {
             _tripsService = tripsService;
         }
-
+        
+        //GET: api/trips
+        //Returns a list of all trips, including associated countries
         [HttpGet]
         public async Task<IActionResult> GetTrips()
         {
